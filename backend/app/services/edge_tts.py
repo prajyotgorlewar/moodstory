@@ -15,7 +15,7 @@ async def generate_voice(script: str, index: int = 0):
 
     # Save audio file in frontend/public
     output_path = os.path.join(frontend_public_path, f"audio_{index}.mp3")
-    voice = "en-US-JennyNeural"
+    voice = "hi-IN-SwaraNeural"
 
     print(f"🎙 Generating voice for script: '{script[:50]}...'")
     print(f"💾 Saving file to: {output_path}")
