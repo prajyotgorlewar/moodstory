@@ -62,19 +62,19 @@ def generate_story(mood: str, words=None):
             cleaned = _FALLBACK_WORDS.get(mood, _DEFAULT_FALLBACK)
 
         prompt = f"""
-Write a short, emotionally engaging story meant to gently uplift the reader.
-Mood: {mood}
-Tone/style: {chosen_genre}
-Try to use these words naturally (if they fit): {', '.join(cleaned)}
+                        Write a short, emotionally engaging moral story meant to gently uplift the reader.
+                        Mood: {mood}
+                        Tone/style: {chosen_genre}
+                        Try to use these words naturally (if they fit): {', '.join(cleaned)}
 
-Rules:
-- Begin with a creative standalone title (no quotes or labels).
-- 300–400 words, conversational and vivid.
-- No Markdown, emojis, symbols, or lists.
-- Avoid complex or poetic language.
-- End with a warm or hopeful message.
-Output only the title and story.
-"""
+                            Rules:
+                            - Begin with a creative standalone title (no quotes or labels).
+                            - 300–400 words, conversational and vivid.
+                            - No Markdown, emojis, symbols, or lists.
+                            - Avoid complex or poetic language.
+                            - End with a warm or hopeful message.
+                            Output only the title and story.
+                            """
 
         response = model.generate_content(prompt)
         return (response.text or "").strip()
