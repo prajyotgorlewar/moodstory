@@ -104,13 +104,13 @@ const Home = () => {
             {/* Top row with icon + title */}
             <div className="flex items-center gap-2 mb-2">
               <Film className="w-5 h-5 text-purple-300 group-hover:text-purple-200 transition-colors" />
-              <p className="font-semibold text-white text-sm sm:text-base">Audio-Visual Stories</p>
+              <p className="font-semibold text-white text-sm sm:text-base">Audio Narration</p>
             </div>
 
             {/* Description with subtle accent */}
             <div className="flex items-start gap-2 text-gray-300 text-xs sm:text-sm leading-snug">
               <Music className="w-4 h-4 mt-0.5 text-purple-400/80" />
-              <p>Dynamic sound & visuals for deeper immersion.</p>
+              <p>Dynamic Audio Narration for deeper immersion.</p>
             </div>
 
             {/* Animated AI-like glowing bottom line */}

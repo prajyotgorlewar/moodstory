@@ -3,10 +3,10 @@ import { useEffect, useState } from "react";
 
 export const MoodIcon = () => {
   const moods = [
-    <Smile key="smile" className="w-10 h-10 text-cyan-300 absolute" strokeWidth={1.5} />,
-    <Frown key="frown" className="w-10 h-10 text-cyan-300 absolute" strokeWidth={1.5} />,
-    <Meh key="meh" className="w-10 h-10 text-cyan-300 absolute" strokeWidth={1.5} />,
-    <Laugh key="laugh" className="w-10 h-10 text-cyan-300 absolute" strokeWidth={1.5} />,
+    <Smile key="smile" className="w-10 h-10 text-purple-500 absolute" strokeWidth={1.5} />,
+    <Frown key="frown" className="w-10 h-10 text-purple-500 absolute" strokeWidth={1.5} />,
+    <Meh key="meh" className="w-10 h-10 text-purple-500 absolute" strokeWidth={1.5} />,
+    <Laugh key="laugh" className="w-10 h-10 text-purple-500 absolute" strokeWidth={1.5} />,
   ];
   const [moodIndex, setMoodIndex] = useState(0);
 

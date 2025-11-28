@@ -2,6 +2,7 @@ import { MagnifyingGlassIcon } from "./MagnifyingGlassIcon";
 import { MoodIcon } from "./MoodIcon";
 import faceScan from "../../assets/faceScan.png";
 import { useEffect, useState } from "react";
+
 const scanningSteps = [
   {
     text: "Extracting facial features",
@@ -20,22 +21,45 @@ const scanningSteps = [
       </div>
     ),
   },
-  { text: "Analyzing biometric data", duration: 4000, icon: <MagnifyingGlassIcon /> },
-  { text: "Detecting mood patterns", duration: 5000, icon: <MoodIcon /> },
+  {
+    text: "Analyzing biometric data",
+    duration: 4000,
+    icon: <MagnifyingGlassIcon className="text-purple-500 w-12 h-12" />,
+  },
+  {
+    text: "Detecting mood patterns",
+    duration: 5000,
+    icon: <MoodIcon className="text-purple-500 w-12 h-12" />,
+  },
 ];
-
 
 export const ScanningAnimation = ({ onComplete }) => {
   const [stepIndex, setStepIndex] = useState(0);
 
+  // 🔹 Pre-generate dots so the pattern doesn't change every render
+  const [dots] = useState(() =>
+    Array.from({ length: 80 }).map(() => {
+      const size = Math.random() * 10 + 8; // 8px → 18px
+      return {
+        top: Math.random() * 100,
+        left: Math.random() * 100,
+        size,
+        delay: Math.random() * 2,        // 0–2s
+        duration: Math.random() * 2 + 3, // 3–5s
+        tx: (Math.random() - 0.5) * 100, // -50px → 50px
+        ty: (Math.random() - 0.5) * 100, // -50px → 50px
+      };
+    })
+  );
+
   useEffect(() => {
     if (stepIndex >= scanningSteps.length) {
-      onComplete();
+      onComplete && onComplete();
       return;
     }
 
     const timer = setTimeout(() => {
-      setStepIndex(prev => prev + 1);
+      setStepIndex((prev) => prev + 1);
     }, scanningSteps[stepIndex].duration);
 
     return () => clearTimeout(timer);
@@ -44,33 +68,132 @@ export const ScanningAnimation = ({ onComplete }) => {
   const currentStep = scanningSteps[stepIndex];
 
   return (
-    <div className="w-full h-full flex flex-col items-center justify-end relative text-white bg-black/60 pb-20 pointer-events-none">
+    <div className="w-full h-full flex flex-col items-center justify-end relative text-white bg-black/80 pb-20 pointer-events-none">
+      {/* 🔹 Local styles for dot float + glowy pulse */}
+      <style>{`
+        @keyframes scanner-dot-float {
+          0% {
+            transform: translate3d(0, 0, 0) scale(0.7);
+            opacity: 0;
+          }
+          25% {
+            opacity: 0.8;
+          }
+          50% {
+            transform: translate3d(var(--tx, 0), var(--ty, 0), 0) scale(1.25);
+            opacity: 1;
+          }
+          75% {
+            opacity: 0.6;
+          }
+          100% {
+            transform: translate3d(0, 0, 0) scale(0.7);
+            opacity: 0;
+          }
+        }
+
+        .scanner-dot {
+          position: absolute;
+          border-radius: 9999px;
+          animation-name: scanner-dot-float;
+          animation-iteration-count: infinite;
+          animation-timing-function: ease-in-out;
+        }
+
+        /* 🔮 Pulsing glow around the card (no waves) */
+        @keyframes glow-pulse {
+          0% {
+            transform: scale(0.95);
+            opacity: 0.45;
+          }
+          30% {
+            transform: scale(1.02);
+            opacity: 0.75;
+          }
+          60% {
+            transform: scale(1.08);
+            opacity: 1;
+          }
+          100% {
+            transform: scale(0.95);
+            opacity: 0.45;
+          }
+        }
+
+        .glow-wrapper {
+          position: absolute;
+          inset: -7px;           /* extend beyond card so it's not clipped */
+          border-radius: 9999px;
+          pointer-events: none;
+          overflow: visible;
+        }
+
+        .glow-bg {
+          width: 120%;
+          height: 120%;
+          position: absolute;
+          top: -10%;
+          left: -10%;
+          border-radius: 9999px;
+          filter: blur(26px);
+          background: conic-gradient(
+            from 180deg at 50% 50%,
+            #4c1d95,
+            #a855f7,
+            #f472b6,
+            #a855f7,
+            #4c1d95
+          );
+          animation: glow-pulse 4s ease-in-out infinite;
+        }
+      `}</style>
+
+      {/* 🔹 Dots Layer */}
       <div className="absolute inset-0 w-full h-full overflow-hidden">
-        {Array.from({ length: 200 }).map((_, i) => (
+        {dots.map((dot, i) => (
           <div
             key={i}
-            className="absolute bg-white/70 rounded-full animate-dot-pulse"
+            className="scanner-dot bg-white/60"
             style={{
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              width: `${Math.random() * 3 + 2}px`,
-              height: `${Math.random() * 3 + 2}px`,
-              animationDelay: `${Math.random() * 2}s`,
-              animationDuration: `${Math.random() * 2 + 2}s`,
+              top: `${dot.top}%`,
+              left: `${dot.left}%`,
+              width: `${dot.size}px`,
+              height: `${dot.size}px`,
+              animationDelay: `${dot.delay}s`,
+              animationDuration: `${dot.duration}s`,
+              "--tx": `${dot.tx}px`,
+              "--ty": `${dot.ty}px`,
             }}
           />
         ))}
       </div>
 
+      {/* Text + Icon card with pulsing glow */}
       {currentStep && (
-        <div key={stepIndex} className="relative z-10 flex items-center justify-center space-x-4 bg-black/20 backdrop-blur-md p-4 rounded-xl shadow-lg border border-white/10 animate-fade-in-long">
-          <div className="w-12 h-12 flex items-center justify-center">
-            {currentStep.icon}
+        <div className="relative z-10 w-[360px] max-w-[90vw]">
+          {/* 🔮 Pulsing glow behind the card */}
+          <div className="glow-wrapper">
+            <div className="glow-bg" />
           </div>
-          <p className="text-xl font-semibold tracking-wider text-left w-64">{currentStep.text}</p>
+
+          {/* Actual card */}
+          <div
+            key={stepIndex}
+            className="relative flex items-center justify-center space-x-4
+              bg-gradient-to-b from-[#050316] via-[#090019] to-[#14002b]
+              p-4 rounded-2xl border border-purple-500/40
+              shadow-[0_0_25px_10px_rgba(168,85,247,0.5)]"
+          >
+            <div className="w-12 h-12 flex items-center justify-center">
+              {currentStep.icon}
+            </div>
+
+            <p className="text-xl font-light tracking-wider w-64">
+              {currentStep.text}
+            </p>
+          </div>
         </div>
       )}
     </div>
   );
 };
-

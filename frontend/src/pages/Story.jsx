@@ -305,7 +305,7 @@ const Story = () => {
       {/* 🎤 AUDIO INPUT PAGE */}
       {pageState === "AUDIO_INPUT" && (
         <div className="bg-gradient-to-br from-purple-900 to-black w-full h-full flex flex-col items-center justify-center text-white text-center p-4">
-          <h1 className="text-3xl md:text-4xl mb-12 font-semibold tracking-wider">
+          <h1 className="text-3xl md:text-4xl mb-32 font-semibold tracking-wider">
             {question}
           </h1>
           <div
@@ -322,7 +322,7 @@ const Story = () => {
               <div className="absolute animate-speak-wave rounded-full border-4 border-pink-500 w-64 h-64 opacity-70" />
             )}
           </div>
-          <p className="mt-10 text-lg text-gray-300">
+          <p className="mt-30 text-lg text-gray-300">
             {isListening ? "Listening..." : "Tap the mic to start speaking"}
           </p>
         </div>
@@ -349,16 +349,166 @@ const Story = () => {
 
       {/* 🧠 STORY GENERATION PAGE */}
       {pageState === "STORY_GENERATION" && (
-        <div className="bg-gradient-to-br from-pink-900 to-purple-700 w-full h-full flex flex-col items-center justify-center text-white">
-          <h2 className="text-3xl mb-12 animate-pulse">
-            Generating your story...
-          </h2>
-          <div className="flex items-center justify-center h-24 w-64 space-x-2">
-            {[...Array(7)].map((_, i) => (
-              <div key={i} className="siri-wave-bar" style={{ animationDelay: `${-0.2 * i}s` }}></div>
-            ))}
+        // <div className="bg-gradient-to-br from-pink-900 to-purple-700 w-full h-full flex flex-col items-center justify-center text-white">
+        //   <h2 className="text-3xl mb-12 animate-pulse">
+        //     Generating your story...
+        //   </h2>
+        //   <div className="flex items-center justify-center h-24 w-64 space-x-2">
+        //     {[...Array(7)].map((_, i) => (
+        //       <div key={i} className="siri-wave-bar" style={{ animationDelay: `${-0.2 * i}s` }}></div>
+        //     ))}
+        //   </div>
+        // </div>
+
+        <div className="bg-gradient-to-b from-[#050316] via-[#090019] to-[#14002b] w-full h-full flex flex-col items-center justify-center text-white relative overflow-hidden">
+
+          {/* Internal Styles for the Slimy Animation to avoid external CSS */}
+          <style>{`
+  .goo-filter {
+    filter: url(#goo);
+    /* keep or remove this if you feel overall spin adds too much motion */
+    animation: spinRing 18s linear infinite;
+  }
+
+  .blob {
+    position: absolute;
+    background: linear-gradient(135deg, #ec4899, #8b5cf6);
+    border-radius: 50%;
+    opacity: 0.9;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+    animation-direction: alternate; /* prevents hard jump 100% → 0% */
+  }
+
+  .blob:nth-child(1) {
+    width: 90px;
+    height: 90px;
+    left: 10%;
+    top: 15%;
+    animation-name: blobPath1;
+    animation-duration: 5.2s;
+    animation-delay: 0s;
+  }
+
+  .blob:nth-child(2) {
+    width: 65px;
+    height: 65px;
+    right: 5%;
+    top: 10%;
+    animation-name: blobPath2;
+    animation-duration: 4.6s;
+    animation-delay: 0.4s;
+  }
+
+  .blob:nth-child(3) {
+    width: 55px;
+    height: 55px;
+    left: 5%;
+    bottom: 5%;
+    animation-name: blobPath3;
+    animation-duration: 4.9s;
+    animation-delay: 0.8s;
+  }
+
+  .blob:nth-child(4) {
+    width: 75px;
+    height: 75px;
+    right: 12%;
+    bottom: 8%;
+    animation-name: blobPath4;
+    animation-duration: 5.6s;
+    animation-delay: 1.2s;
+  }
+
+  /* Curvy, continuous paths (no harsh teleports) */
+
+  @keyframes blobPath1 {
+    0%   { transform: translate(0px,   0px)   scale(1); }
+    20%  { transform: translate(24px, -8px)   scale(1.08); }
+    40%  { transform: translate(40px, 18px)   scale(0.97); }
+    60%  { transform: translate(14px, 34px)   scale(1.12); }
+    80%  { transform: translate(-18px, 12px)  scale(1.03); }
+    100% { transform: translate(-8px, -10px)  scale(1); }
+  }
+
+  @keyframes blobPath2 {
+    0%   { transform: translate(0px,   0px)   scale(1); }
+    20%  { transform: translate(-18px, 18px)  scale(1.06); }
+    40%  { transform: translate(-34px, 2px)   scale(0.96); }
+    60%  { transform: translate(-8px, -26px)  scale(1.13); }
+    80%  { transform: translate(18px, -8px)   scale(1.02); }
+    100% { transform: translate(6px, 10px)    scale(1); }
+  }
+
+  @keyframes blobPath3 {
+    0%   { transform: translate(0px,   0px)   scale(1); }
+    20%  { transform: translate(16px, 22px)   scale(1.09); }
+    40%  { transform: translate(32px, 4px)    scale(0.95); }
+    60%  { transform: translate(10px, -22px)  scale(1.14); }
+    80%  { transform: translate(-20px, -6px)  scale(1.01); }
+    100% { transform: translate(-8px, 8px)    scale(1); }
+  }
+
+  @keyframes blobPath4 {
+    0%   { transform: translate(0px,   0px)   scale(1); }
+    20%  { transform: translate(-22px, 8px)   scale(1.04); }
+    40%  { transform: translate(-6px, 30px)   scale(1.16); }
+    60%  { transform: translate(24px, 12px)   scale(0.94); }
+    80%  { transform: translate(8px, -18px)   scale(1.1); }
+    100% { transform: translate(-4px, -4px)   scale(1); }
+  }
+
+  @keyframes spinRing {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  .glass-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  }
+`}</style>
+
+
+          {/* SVG Filter Definition (Hidden) - Creates the 'Goo' effect */}
+          <svg style={{ position: 'absolute', width: 0, height: 0 }}>
+            <defs>
+              <filter id="goo">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="12" result="blur" />
+                <feColorMatrix
+                  in="blur"
+                  mode="matrix"
+                  values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9"
+                  result="goo"
+                />
+                <feComposite in="SourceGraphic" in2="goo" operator="atop" />
+              </filter>
+            </defs>
+          </svg>
+
+          {/* The Slimy Loader */}
+          <div className="relative w-48 h-48 goo-filter mb-8">
+            {/* Spinning/Moving Blobs */}
+            <div className="blob"></div>
+            <div className="blob"></div>
+            <div className="blob"></div>
+            <div className="blob"></div>
           </div>
+
+          <h2 className="text-2xl mt-14 font-medium tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-pink-300 to-purple-300 animate-pulse">
+            Generating your Story . . .
+          </h2>
+
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-pink-600/20 rounded-full blur-[100px] animate-pulse"></div>
+          <div
+            className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-purple-600/20 rounded-full blur-[100px] animate-pulse"
+            style={{ animationDelay: '1s' }}
+          ></div>
         </div>
+
       )}
 
       {/* 📖 STORY DISPLAY PAGE */}
