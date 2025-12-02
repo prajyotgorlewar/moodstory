@@ -227,7 +227,7 @@ const Story = () => {
             };
 
             try {
-              const saveResponse = await fetch("http://localhost:8000/save-story", {
+              const saveResponse = await fetch(`${import.meta.env.VITE_BACKEND_URL}/save-story`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(storyData),
@@ -338,7 +338,7 @@ const Story = () => {
 
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/generate-story", {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/generate-story`, {
         method: "POST",
         body: formData,
       });
