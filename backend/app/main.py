@@ -18,6 +18,7 @@ app = FastAPI()
 origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "https://moodstory-zeta.vercel.app",
     # You can add more origins here, e.g., your deployed frontend URLs
 ]
 
