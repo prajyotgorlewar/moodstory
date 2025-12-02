@@ -24,26 +24,85 @@ const Story = () => {
   const [question, setQuestion] = useState("How was your day today?");
   const audioChunks = useRef([]);
   const [isPlaying, setIsPlaying] = useState(false);
-  const audioRef = useRef(null);
 
-  // Path to the file saved in frontend/public/
-  const audioSrc = "/audio_0.mp3";
+  const ttsStateRef = useRef({
+    initializedForStoryId: null,
+  });
 
-  const toggleAudio = async () => {
-    const audio = audioRef.current;
-    if (!audio) return;
+  window.speechSynthesis.onvoiceschanged = () => { };
 
-    try {
-      if (isPlaying) {
-        await audio.pause();
-      } else {
-        await audio.play();
-      }
-      setIsPlaying(!isPlaying);
-    } catch (err) {
-      console.error("Audio play/pause error:", err);
+
+
+  const toggleAudio = () => {
+    if (!window.speechSynthesis) {
+      console.error("Speech Synthesis not supported.");
+      return;
     }
+
+    const synth = window.speechSynthesis;
+
+    // Pause
+    if (isPlaying && synth.speaking && !synth.paused) {
+      synth.pause();
+      setIsPlaying(false);
+      return;
+    }
+
+    // Resume
+    if (!isPlaying && synth.paused) {
+      synth.resume();
+      setIsPlaying(true);
+      return;
+    }
+
+    // Restart if already reading
+    if (synth.speaking) synth.cancel();
+
+    const voices = synth.getVoices();
+
+    // ✨ Choose the clearest human-like voices
+    const clearVoice =
+      voices.find(v => v.name.includes("Google US English Female")) || // Chrome - very clear
+      voices.find(v => v.name.includes("Google UK English Female")) ||
+      voices.find(v => v.name.includes("Samantha")) || // Safari - clean & crisp
+      voices.find(v => v.name.includes("Zira")) ||     // Windows clear voice
+      voices.find(v => v.name.toLowerCase().includes("female")) ||
+      voices[0];
+
+    const titleUtterance = new SpeechSynthesisUtterance(story.title || "");
+    const bodyUtterance = new SpeechSynthesisUtterance(story.text || "");
+
+    titleUtterance.voice = clearVoice;
+    bodyUtterance.voice = clearVoice;
+
+    //**CLARITY SETTINGS**
+    // Clean, smooth, crisp — natural but sharp
+    titleUtterance.rate = 1.02;    // slightly faster = clearer diction
+    titleUtterance.pitch = 1.12;   // soft but not childish
+    titleUtterance.volume = 1;
+
+    bodyUtterance.rate = 0.95;
+    bodyUtterance.pitch = 1.10;
+    bodyUtterance.volume = 1;
+
+    // Minimal pause between title and story
+    titleUtterance.onend = () => {
+      setTimeout(() => synth.speak(bodyUtterance), 250);
+    };
+
+    bodyUtterance.onend = () => {
+      setIsPlaying(false);
+    };
+
+    synth.speak(titleUtterance);
+    setIsPlaying(true);
   };
+
+
+
+
+
+
 
   const { userId } = useUserContext();
 
@@ -132,6 +191,17 @@ const Story = () => {
     setMessage("✅ Captured image and stopped webcam");
     setIsCapturing(false);
   }
+
+  // Stop any ongoing speech when story changes
+  useEffect(() => {
+    // When story text/title changes or on unmount, cancel any ongoing speech
+    return () => {
+      if (typeof window !== "undefined" && "speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, [story.title, story.text]);
+
 
   // -----------------------------
   // 📤 Handle Story Generation
@@ -296,13 +366,13 @@ const Story = () => {
   };
 
   // -----------------------------
-  // 🎨 UI Rendering
+  // UI Rendering
   // -----------------------------
   return (
     <div className="w-screen h-screen flex flex-col items-center justify-center relative overflow-hidden bg-black font-sans">
       <canvas ref={canvasRef} style={{ display: "none" }} />
 
-      {/* 🎤 AUDIO INPUT PAGE */}
+      {/*AUDIO INPUT PAGE */}
       {pageState === "AUDIO_INPUT" && (
         <div className="bg-gradient-to-br from-purple-900 to-black w-full h-full flex flex-col items-center justify-center text-white text-center p-4">
           <h1 className="text-3xl md:text-4xl mb-32 font-semibold tracking-wider">
@@ -328,7 +398,7 @@ const Story = () => {
         </div>
       )}
 
-      {/* 📸 SCANNING PAGE */}
+      {/*SCANNING PAGE */}
       {pageState === "SCANNING" && (
         <div className="w-full h-full flex items-center justify-center relative">
           <video
@@ -347,130 +417,117 @@ const Story = () => {
         </div>
       )}
 
-      {/* 🧠 STORY GENERATION PAGE */}
+      {/*STORY GENERATION PAGE */}
       {pageState === "STORY_GENERATION" && (
-        // <div className="bg-gradient-to-br from-pink-900 to-purple-700 w-full h-full flex flex-col items-center justify-center text-white">
-        //   <h2 className="text-3xl mb-12 animate-pulse">
-        //     Generating your story...
-        //   </h2>
-        //   <div className="flex items-center justify-center h-24 w-64 space-x-2">
-        //     {[...Array(7)].map((_, i) => (
-        //       <div key={i} className="siri-wave-bar" style={{ animationDelay: `${-0.2 * i}s` }}></div>
-        //     ))}
-        //   </div>
-        // </div>
-
         <div className="bg-gradient-to-b from-[#050316] via-[#090019] to-[#14002b] w-full h-full flex flex-col items-center justify-center text-white relative overflow-hidden">
-
-          {/* Internal Styles for the Slimy Animation to avoid external CSS */}
           <style>{`
-  .goo-filter {
-    filter: url(#goo);
-    /* keep or remove this if you feel overall spin adds too much motion */
-    animation: spinRing 18s linear infinite;
-  }
+            .goo-filter {
+              filter: url(#goo);
+              /* keep or remove this if you feel overall spin adds too much motion */
+              animation: spinRing 18s linear infinite;
+            }
 
-  .blob {
-    position: absolute;
-    background: linear-gradient(135deg, #ec4899, #8b5cf6);
-    border-radius: 50%;
-    opacity: 0.9;
-    animation-timing-function: ease-in-out;
-    animation-iteration-count: infinite;
-    animation-direction: alternate; /* prevents hard jump 100% → 0% */
-  }
+            .blob {
+              position: absolute;
+              background: linear-gradient(135deg, #ec4899, #8b5cf6);
+              border-radius: 50%;
+              opacity: 0.9;
+              animation-timing-function: ease-in-out;
+              animation-iteration-count: infinite;
+              animation-direction: alternate; /* prevents hard jump 100% → 0% */
+            }
 
-  .blob:nth-child(1) {
-    width: 90px;
-    height: 90px;
-    left: 10%;
-    top: 15%;
-    animation-name: blobPath1;
-    animation-duration: 5.2s;
-    animation-delay: 0s;
-  }
+            .blob:nth-child(1) {
+              width: 90px;
+              height: 90px;
+              left: 10%;
+              top: 15%;
+              animation-name: blobPath1;
+              animation-duration: 5.2s;
+              animation-delay: 0s;
+            }
 
-  .blob:nth-child(2) {
-    width: 65px;
-    height: 65px;
-    right: 5%;
-    top: 10%;
-    animation-name: blobPath2;
-    animation-duration: 4.6s;
-    animation-delay: 0.4s;
-  }
+            .blob:nth-child(2) {
+              width: 65px;
+              height: 65px;
+              right: 5%;
+              top: 10%;
+              animation-name: blobPath2;
+              animation-duration: 4.6s;
+              animation-delay: 0.4s;
+            }
 
-  .blob:nth-child(3) {
-    width: 55px;
-    height: 55px;
-    left: 5%;
-    bottom: 5%;
-    animation-name: blobPath3;
-    animation-duration: 4.9s;
-    animation-delay: 0.8s;
-  }
+            .blob:nth-child(3) {
+              width: 55px;
+              height: 55px;
+              left: 5%;
+              bottom: 5%;
+              animation-name: blobPath3;
+              animation-duration: 4.9s;
+              animation-delay: 0.8s;
+            }
 
-  .blob:nth-child(4) {
-    width: 75px;
-    height: 75px;
-    right: 12%;
-    bottom: 8%;
-    animation-name: blobPath4;
-    animation-duration: 5.6s;
-    animation-delay: 1.2s;
-  }
+            .blob:nth-child(4) {
+              width: 75px;
+              height: 75px;
+              right: 12%;
+              bottom: 8%;
+              animation-name: blobPath4;
+              animation-duration: 5.6s;
+              animation-delay: 1.2s;
+            }
 
-  /* Curvy, continuous paths (no harsh teleports) */
+            /* Curvy, continuous paths (no harsh teleports) */
 
-  @keyframes blobPath1 {
-    0%   { transform: translate(0px,   0px)   scale(1); }
-    20%  { transform: translate(24px, -8px)   scale(1.08); }
-    40%  { transform: translate(40px, 18px)   scale(0.97); }
-    60%  { transform: translate(14px, 34px)   scale(1.12); }
-    80%  { transform: translate(-18px, 12px)  scale(1.03); }
-    100% { transform: translate(-8px, -10px)  scale(1); }
-  }
+            @keyframes blobPath1 {
+              0%   { transform: translate(0px,   0px)   scale(1); }
+              20%  { transform: translate(24px, -8px)   scale(1.08); }
+              40%  { transform: translate(40px, 18px)   scale(0.97); }
+              60%  { transform: translate(14px, 34px)   scale(1.12); }
+              80%  { transform: translate(-18px, 12px)  scale(1.03); }
+              100% { transform: translate(-8px, -10px)  scale(1); }
+            }
 
-  @keyframes blobPath2 {
-    0%   { transform: translate(0px,   0px)   scale(1); }
-    20%  { transform: translate(-18px, 18px)  scale(1.06); }
-    40%  { transform: translate(-34px, 2px)   scale(0.96); }
-    60%  { transform: translate(-8px, -26px)  scale(1.13); }
-    80%  { transform: translate(18px, -8px)   scale(1.02); }
-    100% { transform: translate(6px, 10px)    scale(1); }
-  }
+            @keyframes blobPath2 {
+              0%   { transform: translate(0px,   0px)   scale(1); }
+              20%  { transform: translate(-18px, 18px)  scale(1.06); }
+              40%  { transform: translate(-34px, 2px)   scale(0.96); }
+              60%  { transform: translate(-8px, -26px)  scale(1.13); }
+              80%  { transform: translate(18px, -8px)   scale(1.02); }
+              100% { transform: translate(6px, 10px)    scale(1); }
+            }
 
-  @keyframes blobPath3 {
-    0%   { transform: translate(0px,   0px)   scale(1); }
-    20%  { transform: translate(16px, 22px)   scale(1.09); }
-    40%  { transform: translate(32px, 4px)    scale(0.95); }
-    60%  { transform: translate(10px, -22px)  scale(1.14); }
-    80%  { transform: translate(-20px, -6px)  scale(1.01); }
-    100% { transform: translate(-8px, 8px)    scale(1); }
-  }
+            @keyframes blobPath3 {
+              0%   { transform: translate(0px,   0px)   scale(1); }
+              20%  { transform: translate(16px, 22px)   scale(1.09); }
+              40%  { transform: translate(32px, 4px)    scale(0.95); }
+              60%  { transform: translate(10px, -22px)  scale(1.14); }
+              80%  { transform: translate(-20px, -6px)  scale(1.01); }
+              100% { transform: translate(-8px, 8px)    scale(1); }
+            }
 
-  @keyframes blobPath4 {
-    0%   { transform: translate(0px,   0px)   scale(1); }
-    20%  { transform: translate(-22px, 8px)   scale(1.04); }
-    40%  { transform: translate(-6px, 30px)   scale(1.16); }
-    60%  { transform: translate(24px, 12px)   scale(0.94); }
-    80%  { transform: translate(8px, -18px)   scale(1.1); }
-    100% { transform: translate(-4px, -4px)   scale(1); }
-  }
+            @keyframes blobPath4 {
+              0%   { transform: translate(0px,   0px)   scale(1); }
+              20%  { transform: translate(-22px, 8px)   scale(1.04); }
+              40%  { transform: translate(-6px, 30px)   scale(1.16); }
+              60%  { transform: translate(24px, 12px)   scale(0.94); }
+              80%  { transform: translate(8px, -18px)   scale(1.1); }
+              100% { transform: translate(-4px, -4px)   scale(1); }
+            }
 
-  @keyframes spinRing {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
+            @keyframes spinRing {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
 
-  .glass-card {
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-  }
-`}</style>
+            .glass-card {
+              background: rgba(255, 255, 255, 0.05);
+              backdrop-filter: blur(12px);
+              -webkit-backdrop-filter: blur(12px);
+              border: 1px solid rgba(255, 255, 255, 0.1);
+              box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            }
+          `}</style>
 
 
           {/* SVG Filter Definition (Hidden) - Creates the 'Goo' effect */}
@@ -511,16 +568,13 @@ const Story = () => {
 
       )}
 
-      {/* 📖 STORY DISPLAY PAGE */}
+      {/* STORY DISPLAY PAGE */}
       {pageState === "STORY_DISPLAY" && (
         <div className="bg-gradient-to-br from-black to-purple-900 w-full h-full text-white flex flex-col items-center relative p-6 pt-24 overflow-y-auto">
           <h1 className="text-4xl md:text-5xl font-bold text-center mb-8">
             {story.title}
           </h1>
           <div style={{ textAlign: "center", marginTop: "10px", marginBottom: "20px" }}>
-            {/* hidden audio element */}
-            <audio ref={audioRef} src={audioSrc} preload="auto" />
-
             <button
               onClick={toggleAudio}
               style={{
@@ -534,9 +588,9 @@ const Story = () => {
               }}
             >
               {isPlaying ? <Pause size={20} /> : <Play size={20} />}{" "}
-              {/* {isPlaying ? "Pause Audio" : "Play Audio"} */}
             </button>
           </div>
+
 
           <p className="max-w-4xl text-lg text-justify leading-relaxed whitespace-pre-wrap">
             {displayedText.map(({ word, id }) => (

@@ -31,3 +31,4 @@ edge_tts
 
 # Optional (for async MongoDB access, use instead of pymongo)
 # motor
+huggingface_hub

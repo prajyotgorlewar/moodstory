@@ -1,6 +1,5 @@
 from app.services.gemini_api import generate_story
 from app.services.lstm_model import generate_words
-from app.services.edge_tts import generate_voice
 from app.services.mood_detector import fusion_mood_detect
 from fastapi import APIRouter, File, UploadFile, Form, HTTPException
 import traceback
@@ -28,8 +27,6 @@ async def generate_story_endpoint(
         mood, amood, imood = fusion_mood_detect(img_path, audio_path)
         words = generate_words(mood)
         story = generate_story(mood, words)
-
-        audio_path = await generate_voice(story)
         print(f"Generated audio at: {audio_path}")
         story_lines = story.split("\n", 1)
         title = story_lines[0].strip() if len(story_lines) > 0 else ""
@@ -42,7 +39,6 @@ async def generate_story_endpoint(
         # ✅ Success
         return {
             "status": "true",
-            "audio_path":audio_path,
             "mood": mood,
             "audioMood": amood,
             "imageMood": imood,

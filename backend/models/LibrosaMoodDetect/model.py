@@ -5,15 +5,19 @@ import warnings
 import numpy as np
 import librosa
 from tensorflow.keras.models import load_model
-
+from huggingface_hub import hf_hub_download  # <- NEW
 
 warnings.filterwarnings('ignore')
 
+
 class AudioMoodDetector:
     def __init__(self, model_path=None):
-        dirname = os.path.dirname(__file__)
-        if model_path is None:
-            model_path = os.path.join(dirname, "audio_model.keras")
+        # Always load from Hugging Face (cached automatically)
+        model_path = hf_hub_download(
+            repo_id="prajyotgorlewar/moodstoryLibrosa",  # your HF repo
+            filename="audio_model.keras"                 # file name in that repo
+        )
+
         self.model = load_model(model_path)
         self.class_labels = [
             'female_angry', 'female_calm', 'female_disgust', 'female_fearful',
@@ -25,11 +29,13 @@ class AudioMoodDetector:
     def preprocess_audio(self, file_path, sr=22050, duration=3, n_mfcc=40, n_frames=75):
         y, _ = librosa.load(file_path, sr=sr, duration=duration)
         mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=n_mfcc)
+
         if mfcc.shape[1] < n_frames:
             pad_width = n_frames - mfcc.shape[1]
-            mfcc = np.pad(mfcc, ((0,0),(0,pad_width)), mode='constant')
+            mfcc = np.pad(mfcc, ((0, 0), (0, pad_width)), mode='constant')
         elif mfcc.shape[1] > n_frames:
             mfcc = mfcc[:, :n_frames]
+
         mfcc = mfcc.T
         mfcc_mean = np.mean(mfcc, axis=1).reshape(n_frames, 1)
         return mfcc_mean[np.newaxis, ...]

@@ -20,7 +20,7 @@ import { motion } from "framer-motion";
 import { useUserContext } from "../context/UserContext";
 
 // Neon / moodstory palette
-const COLORS = ["#671fc6ff", "#c18affff",  "#EC4899", "#22D3EE", "#F97316", "#22C55E"];
+const COLORS = ["#671fc6ff", "#c18affff", "#e1ff00ff", "#22D3EE", "#F97316", "#22C55E", "#EC4899"];
 
 const Dashboard = () => {
   const { userId } = useUserContext();
@@ -81,13 +81,13 @@ const Dashboard = () => {
   }));
 
   const MOOD_ORDER = [
-    "Depressed",
+    "Angry",
     "Sad",
     "Disgust",
     "Neutral",
     "Calm",
     "Happy",
-    "Exited",
+    "Surprise",
   ];
 
 
@@ -149,8 +149,8 @@ const Dashboard = () => {
             <button
               key={r}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border backdrop-blur-md ${range === r
-                  ? "bg-gradient-to-r from-fuchsia-500 via-purple-500 to-indigo-500 text-white border-fuchsia-400 shadow-[0_0_20px_rgba(168,85,247,0.7)]"
-                  : "bg-white/5 border-white/10 text-slate-200 hover:bg-white/10 hover:border-fuchsia-400/60"
+                ? "bg-gradient-to-r from-fuchsia-500 via-purple-500 to-indigo-500 text-white border-fuchsia-400 shadow-[0_0_20px_rgba(168,85,247,0.7)]"
+                : "bg-white/5 border-white/10 text-slate-200 hover:bg-white/10 hover:border-fuchsia-400/60"
                 }`}
               onClick={() => setRange(r)}
             >
@@ -234,7 +234,7 @@ const Dashboard = () => {
                     cx="50%"
                     cy="50%"
                     outerRadius={110}
-                    innerRadius={70} 
+                    innerRadius={70}
                     dataKey="value"
                     label={({ name }) =>
                       name.charAt(0).toUpperCase() + name.slice(1).toLowerCase()
@@ -301,7 +301,7 @@ const Dashboard = () => {
                   <XAxis
                     dataKey="date"
                     stroke="#E5E7EB"
-                    tick={{ fill: "#E5E7EB", fontSize: 12, dy: 15 }} 
+                    tick={{ fill: "#E5E7EB", fontSize: 12, dy: 15 }}
                   />
 
                   {/* Y-axis → ordered moods */}
@@ -322,11 +322,15 @@ const Dashboard = () => {
                       padding: "8px 12px",
                       color: "#F9FAFB",
                     }}
-                    formatter={(value, name) => {
-                      if (name === "moodScore") return [MOOD_ORDER[value], "Mood"];
+                    formatter={(value, name, { payload }) => {
+                      // payload is the full data object for that point: { date, mood, moodScore }
+                      if (name === "moodScore") {
+                        return [payload.mood, "Mood"]; // 👈 show the exact mood from that story
+                      }
                       return [value, name];
                     }}
                   />
+
 
                   <Area
                     type="monotone"
